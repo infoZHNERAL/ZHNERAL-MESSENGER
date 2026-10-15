@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ZHNERAL Messenger</title>
+<style>
+*{box-sizing:border-box}
+body{
+  margin:0;
+  background:#0e1621;
+  color:white;
+  font-family:Tahoma,Arial,sans-serif;
+}
+header{
+  background:#17212b;
+  padding:20px;
+  text-align:center;
+  font-size:25px;
+  font-weight:bold;
+  border-bottom:2px solid #229ed9;
+}
+main{padding:20px;text-align:center}
+.card{
+  background:#17212b;
+  border-radius:18px;
+  padding:25px 15px;
+  margin-top:30px;
+}
+input,button{
+  width:100%;
+  padding:14px;
+  margin-top:12px;
+  border:0;
+  border-radius:10px;
+  font-size:16px;
+}
+input{background:#242f3d;color:white}
+button{
+  background:#229ed9;
+  color:white;
+  font-weight:bold;
+}
+.note{color:#aebac7;font-size:13px}
+</style>
+</head>
+<body>
+<header>✦ ZHNERAL ✦</header>
+<main>
+  <div class="card">
+    <h2>به ژنرال خوش آمدی 💬</h2>
+    <p>پیام‌رسان آنلاین و آفلاین تو</p>
+    <input id="username" placeholder="نام کاربری خود را وارد کن">
+    <button onclick="enterApp()">ورود به برنامه</button>
+    <p class="note">نسخه آزمایشی پیام‌رسان ژنرال</p>
+  </div>
+</main>
+<script>
+function enterApp(){
+  const name=document.getElementById('username').value.trim();
+  if(!name){
+    alert('لطفاً نام کاربری را وارد کن.');
+    return;
+  }
+  localStorage.setItem('zhneral_username',name);
+  alert('خوش آمدی '+name+'! نسخه آزمایشی آماده است.');
+}
+</script>
+</body>
+</html>
