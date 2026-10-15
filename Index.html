@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#17212b">
+<title>ZHNERAL Messenger</title>
+<style>
+*{box-sizing:border-box}
+body{
+  margin:0;background:#0e1621;color:#fff;
+  font-family:Tahoma,Arial,sans-serif
+}
+button,input{font:inherit}
+button{cursor:pointer}
+.app{max-width:600px;margin:auto;height:100dvh;
+display:flex;flex-direction:column;background:#17212b}
+.header{background:#17212b;padding:15px;
+display:flex;align-items:center;gap:12px;
+border-bottom:1px solid #293746}
+.logo{width:45px;height:45px;border-radius:50%;
+background:#2481cc;display:grid;place-items:center;
+font-size:20px;font-weight:bold}
+.title{font-size:20px;font-weight:bold}
+.subtitle{font-size:12px;color:#9db1c5;margin-top:5px}
+.icon{margin-right:auto;border:0;background:transparent;
+color:white;font-size:23px}
+.search{padding:10px;background:#17212b}
+.search input{width:100%;padding:12px;border:0;
+border-radius:10px;background:#242f3d;color:white;
+outline:none}
+.tabs{display:flex;background:#17212b}
+.tab{flex:1;padding:14px 5px;text-align:center;
+color:#9db1c5;border:0;background:transparent}
+.tab.active{color:#62b5f8;border-bottom:3px solid #62b5f8}
+.content{flex:1;overflow:auto}
+.chatrow{display:flex;align-items:center;gap:12px;
+padding:13px;border-bottom:1px solid #202c39;
+cursor:pointer}
+.avatar{flex-shrink:0;width:52px;height:52px;
+border-radius:50%;background:#3979a8;
+display:grid;place-items:center;font-size:21px}
+.chatinfo{flex:1;min-width:0}
+.chatname{font-size:16px;font-weight:bold;margin-bottom:7px}
+.preview{font-size:13px;color:#9db1c5;
+white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.time{font-size:11px;color:#9db1c5}
+.empty{text-align:center;color:#9db1c5;padding:35px 15px}
+.bottom{display:flex;background:#17212b;
+border-top:1px solid #293746}
+.bottom button{flex:1;background:none;border:0;
+color:#9db1c5;padding:12px 3px;font-size:12px}
+.bottom button.active{color:#62b5f8}
+#conversation{display:none;flex-direction:column;flex:1;min-height:0}
+.messages{flex:1;overflow:auto;padding:15px;
+display:flex;flex-direction:column;gap:10px}
+.bubble{max-width:85%;padding:11px 14px;
+border-radius:15px;background:#253747;
+align-self:flex-start;overflow-wrap:anywhere}
+.bubble.mine{align-self:flex-end;background:#2b5278}
+.msgtime{display:block;font-size:10px;
+color:#c1d6e8;text-align:left;margin-top:5px}
+.composer{display:flex;gap:8px;padding:10px;
+background:#17212b}
+.composer input{flex:1;min-width:0;padding:12px;
+border:0;border-radius:22px;background:#242f3d;color:white}
+.send{border:0;border-radius:50%;width:45px;height:45px;
+background:#2481cc;color:white;font-size:20px}
+#chatList{display:block;flex:1;min-height:0;overflow:auto}
+#chatList .content{overflow:visible}
+#back{display:none}
+</style>
+</head>
+<body>
+<div class="app">
+<header class="header">
+<button class="icon" id="back" onclick="showChats()">‹</button>
+<div class="logo">Z</div>
+<div>
+<div class="title">ZHNERAL</div>
+<div class="subtitle" id="headerSub">پیام‌رسان شما</div>
+</div>
+<button class="icon" id="newChat" onclick="newConversation()">＋</button>
+</header>
+
+<div id="chatList">
+<div class="search">
+<input id="search" placeholder="جست‌وجوی گفتگو..." oninput="renderChats()">
+</div>
+<div class="tabs">
+<button class="tab active" onclick="setTab('all',this)">همه</button>
+<button class="tab" onclick="setTab('unread',this)">خوانده‌نشده</button>
+<button class="tab" onclick="setTab('personal',this)">شخصی</button>
+</div>
+<div class="content" id="chats"></div>
+</div>
+
+<section id="conversation">
+<div class="messages" id="messages"></div>
+<form class="composer" id="sendForm">
+<input id="messageInput" autocomplete="off" placeholder="پیام بنویس...">
+<button class="send" type="submit">➤</button>
+</form>
+</section>
+
+<nav class="bottom" id="bottomNav">
+<button class="active" onclick="showSection('chats',this)">💬<br>گفتگوها</button>
+<button onclick="showSection('contacts',this)">👥<br>مخاطبین</button>
+<button onclick="showSection('saved',this)">🔖<br>ذخیره‌شده</button>
+<button onclick="showSection('settings',this)">⚙️<br>تنظیمات</button>
+</nav>
+</div>
+
+<script>
+const $=id=>document.getElementById(id);
+let tab='all',current=null,section='chats';
+
+let chats=JSON.parse(localStorage.getItem('zhneral_chats')||'[]');
+let history=JSON.parse(localStorage.getItem('zhneral_messages')||'{}');
+
+function save(){
+ localStorage.setItem('zhneral_chats',JSON.stringify(chats));
+ localStorage.setItem('zhneral_messages',JSON.stringify(history));
+}
+function renderChats(){
+ const q=$('search').value.trim().toLowerCase();
+ let list=chats.filter(c=>
+ c.name.toLowerCase().includes(q)&&
+ (tab!=='unread'||c.unread)&&
+ (tab!=='personal'||!c.group)
+ );
+ $('chats').innerHTML='';
+ if(!list.length){
+ $('chats').innerHTML='<div class="empty">هنوز گفتگویی نداری.<br>برای شروع روی ＋ بزن.</div>';
+ return;
+ }
+ list.forEach(c=>{
+ const row=document.createElement('div');
+ row.className='chatrow';
+ const avatar=document.createElement('div');
+ avatar.className='avatar';avatar.textContent=c.name.slice(0,1);
+ const info=document.createElement('div');info.className='chatinfo';
+ const name=document.createElement('div');name.className='chatname';name.textContent=c.name;
+ const preview=document.createElement('div');preview.className='preview';
+ const msgs=history[c.id]||[];
+ preview.textContent=msgs.length?msgs[msgs.length-1].text:'شروع گفتگو';
+ info.append(name,preview);
+ const time=document.createElement('div');time.className='time';
+ time.textContent=c.unread?'پیام جدید':'ZHNERAL';
+ row.append(avatar,info,time);
+ row.onclick=()=>openChat(c.id);
+ $('chats').append(row);
+ });
+}
+function setTab(value,button){
+ tab=value;
+ document.querySelectorAll('.tab').forEach(b=>b.classList.remove('active'));
+ button.classList.add('active');renderChats();
+}
+function newConversation(){
+ const name=prompt('نام مخاطب را وارد کن:');
+ if(!name||!name.trim())return;
+ const c={id:Date.now().toString(),name:name.trim(),unread:false};
+ chats.unshift(c);history[c.id]=history[c.id]||{};save();renderChats();openChat(c.id);
+}
+function openChat(id){
+ current=chats.find(c=>c.id===id);if(!current)return;
+ current.unread=false;save();
+ $('chatList').style.display='none';
+ $('conversation').style.display='flex';
+ $('bottomNav').style.display='none';
+ $('back').style.display='block';
+ $('newChat').style.display='none';
+ $('headerSub').textContent=current.name;
+ renderMessages();
+}
+function showChats(){
+ current=null;
+ $('conversation').style.display='none';
+ $('chatList').style.display='block';
+ $('bottomNav').style.display='flex';
+ $('back').style.display='none';
+ $('newChat').style.display='block';
+ $('headerSub').textContent='پیام‌رسان شما';
+ renderChats();
+}
+function renderMessages(){
+ const box=$('messages');box.innerHTML='';
+ (history[current.id]||[]).forEach(m=>{
+ const b=document.createElement('div');
+ b.className='bubble'+(m.mine?' mine':'');
+ b.textContent=m.text;
+ const t=document.createElement('span');t.className='msgtime';t.textContent=m.time;
+ b.append(t);box.append(b);
+ });
+ box.scrollTop=box.scrollHeight;
+}
+$('sendForm').addEventListener('submit',e=>{
+ e.preventDefault();
+ const text=$('messageInput').value.trim();
+ if(!text||!current)return;
+ history[current.id]=history[current.id]||[];
+ history[current.id].push({
+ text,mine:true,time:new Date().toLocaleTimeString('fa-IR',{hour:'2-digit',minute:'2-digit'})
+ });
+ $('messageInput').value='';save();renderMessages();renderChats();
+});
+function showSection(name,button){
+ if(name==='chats'){showChats();return;}
+ if(name==='contacts'){
+ alert('مخاطبین آنلاین را در مرحله اتصال سرور اضافه می‌کنیم.');
+ return;
+ }
+ if(name==='saved'){
+ alert('در نسخه بعدی، پیام‌های ذخیره‌شده را اضافه می‌کنیم.');
+ return;
+ }
+ if(name==='settings'){
+ alert('تنظیمات حساب کاربری در مرحله بعد اضافه می‌شود.');
+ return;
+ }
+}
+renderChats();
+</script>
+</body>
+  </html>
